@@ -17,7 +17,7 @@ async def lifespan(app: FastAPI):
     """
     # 启动事件
     print(f"{settings.app_name} v{settings.app_version} 启动中...")
-    print("API文档地址: http://localhost:8002/docs")
+    print("API文档地址: http://localhost:8000/docs")
 
     yield
 
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",
-        port=8002,
+        port=8000,
         reload=settings.debug
     )
     
