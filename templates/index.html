@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web3 API Explorer - 现代化区块链接口</title>
+    
+    <!-- 外部CSS库 -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- 自定义样式 -->
+    <link href="/static/css/styles.css" rel="stylesheet">
+    
+    <!-- JavaScript库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen transition-colors duration-300">
+    <!-- 深色模式切换 -->
+    <button id="dark-mode-toggle" class="fixed top-4 right-4 z-50 bg-gray-800 text-white p-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <!-- 页面头部 -->
+    <header class="gradient-bg text-white relative overflow-hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-10"></div>
+        <div class="container mx-auto px-6 py-12 relative z-10">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-5xl font-bold mb-3">Web3 API Explorer</h1>
+                    <p class="text-blue-100 text-xl mb-6">探索以太坊区块链的现代化接口</p>
+                    <div class="flex items-center space-x-6">
+                        <span id="connection-status" class="inline-flex items-center px-6 py-3 rounded-full text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg border border-white border-opacity-20 backdrop-blur-sm">
+                            <span class="w-4 h-4 bg-yellow-300 rounded-full mr-3 animate-pulse"></span>
+                            <span class="drop-shadow-lg">检测连接中...</span>
+                        </span>
+                        <div class="text-sm opacity-75">
+                            <div><i class="fas fa-code-branch mr-2"></i>API版本: v0.1.0</div>
+                            <div class="mt-1"><i class="fas fa-network-wired mr-2"></i>以太坊主网</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hidden lg:block">
+                    <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-6">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold mb-2" id="block-number-display">-</div>
+                            <div class="text-sm opacity-75">当前区块</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要内容区域 -->
+    <main class="container mx-auto px-6 py-12">
+        <!-- 快速统计卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+            <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">连接状态</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" id="connection-text">检测中...</p>
+                    </div>
+                    <div class="icon-circle bg-blue-100">
+                        <i class="fas fa-plug text-blue-600"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">当前区块</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" id="current-block">-</p>
+                    </div>
+                    <div class="icon-circle bg-green-100">
+                        <i class="fas fa-cube text-green-600"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">链ID</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" id="chain-id-display">-</p>
+                    </div>
+                    <div class="icon-circle bg-purple-100">
+                        <i class="fas fa-link text-purple-600"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Gas价格</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" id="gas-price-display">-</p>
+                    </div>
+                    <div class="icon-circle bg-orange-100">
+                        <i class="fas fa-gas-pump text-orange-600"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API端点测试区域 -->
+        <div class="mb-12">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-3xl font-bold text-gray-800">可用API端点</h2>
+                <button onclick="refreshAllData()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center">
+                    <i class="fas fa-sync-alt mr-2"></i>刷新数据
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+                <!-- Hello World端点 -->
+                <div class="bg-white rounded-xl shadow-lg p-8 endpoint-card get card-hover">
+                    <div class="flex items-center justify-between mb-6">
+                        <span class="method-badge method-get">GET</span>
+                        <button onclick="testEndpoint('hello')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-medium transition-colors flex items-center">
+                            <i class="fas fa-play mr-2"></i>测试
+                        </button>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-3 flex items-center">
+                        <i class="fas fa-hand-paper text-blue-500 mr-3"></i>
+                        Hello World
+                    </h3>
+                    <p class="text-gray-600 mb-4">返回Web3 API服务的欢迎消息</p>
+                    <div class="bg-gray-50 rounded-lg p-3 mb-4">
+                        <code class="text-sm text-gray-700">GET /api/v1/hello</code>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        <i class="fas fa-clock mr-1"></i>响应时间: <span id="hello-response-time">-</span>
+                    </div>
+                </div>
+
+                <!-- 连接状态端点 -->
+                <div class="bg-white rounded-xl shadow-lg p-8 endpoint-card get card-hover">
+                    <div class="flex items-center justify-between mb-6">
+                        <span class="method-badge method-get">GET</span>
+                        <button onclick="testEndpoint('status')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-medium transition-colors flex items-center">
+                            <i class="fas fa-play mr-2"></i>测试
+                        </button>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-3 flex items-center">
+                        <i class="fas fa-heartbeat text-green-500 mr-3"></i>
+                        连接状态
+                    </h3>
+                    <p class="text-gray-600 mb-4">获取Web3服务与以太坊网络的连接状态</p>
+                    <div class="bg-gray-50 rounded-lg p-3 mb-4">
+                        <code class="text-sm text-gray-700">GET /api/v1/status</code>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        <i class="fas fa-clock mr-1"></i>响应时间: <span id="status-response-time">-</span>
+                    </div>
+                </div>
+
+                <!-- 区块号端点 -->
+                <div class="bg-white rounded-xl shadow-lg p-8 endpoint-card get card-hover">
+                    <div class="flex items-center justify-between mb-6">
+                        <span class="method-badge method-get">GET</span>
+                        <button onclick="testEndpoint('block-number')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-medium transition-colors flex items-center">
+                            <i class="fas fa-play mr-2"></i>测试
+                        </button>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-3 flex items-center">
+                        <i class="fas fa-cube text-purple-500 mr-3"></i>
+                        当前区块号
+                    </h3>
+                    <p class="text-gray-600 mb-4">获取以太坊主网的最新区块编号</p>
+                    <div class="bg-gray-50 rounded-lg p-3 mb-4">
+                        <code class="text-sm text-gray-700">GET /api/v1/block-number</code>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        <i class="fas fa-clock mr-1"></i>响应时间: <span id="block-response-time">-</span>
+                    </div>
+                </div>
+
+                <!-- 地址余额端点 -->
+                <div class="bg-white rounded-xl shadow-lg p-8 endpoint-card get card-hover">
+                    <div class="flex items-center justify-between mb-6">
+                        <span class="method-badge method-get">GET</span>
+                        <button onclick="testBalance()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-medium transition-colors flex items-center">
+                            <i class="fas fa-play mr-2"></i>测试
+                        </button>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-3 flex items-center">
+                        <i class="fas fa-wallet text-yellow-500 mr-3"></i>
+                        地址余额
+                    </h3>
+                    <p class="text-gray-600 mb-4">查询指定以太坊地址的ETH余额</p>
+                    <div class="mb-4">
+                        <input type="text" id="address-input" placeholder="输入以太坊地址 (例如: 0x742d35Cc6634C0532925a3b844Bc9e7595f525Eb)" 
+                               class="w-full text-sm border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3 mb-4">
+                        <code class="text-sm text-gray-700">GET /api/v1/balance/{address}</code>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        <i class="fas fa-clock mr-1"></i>响应时间: <span id="balance-response-time">-</span>
+                    </div>
+                </div>
+
+                <!-- 链ID端点 -->
+                <div class="bg-white rounded-xl shadow-lg p-8 endpoint-card get card-hover">
+                    <div class="flex items-center justify-between mb-6">
+                        <span class="method-badge method-get">GET</span>
+                        <button onclick="testEndpoint('chain-id')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-medium transition-colors flex items-center">
+                            <i class="fas fa-play mr-2"></i>测试
+                        </button>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-3 flex items-center">
+                        <i class="fas fa-link text-indigo-500 mr-3"></i>
+                        链ID
+                    </h3>
+                    <p class="text-gray-600 mb-4">获取当前连接的以太坊链ID</p>
+                    <div class="bg-gray-50 rounded-lg p-3 mb-4">
+                        <code class="text-sm text-gray-700">GET /api/v1/chain-id</code>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        <i class="fas fa-clock mr-1"></i>响应时间: <span id="chain-response-time">-</span>
+                    </div>
+                </div>
+
+                <!-- Gas价格端点 -->
+                <div class="bg-white rounded-xl shadow-lg p-8 endpoint-card get card-hover">
+                    <div class="flex items-center justify-between mb-6">
+                        <span class="method-badge method-get">GET</span>
+                        <button onclick="testEndpoint('gas-price')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-medium transition-colors flex items-center">
+                            <i class="fas fa-play mr-2"></i>测试
+                        </button>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-3 flex items-center">
+                        <i class="fas fa-gas-pump text-orange-600 mr-3"></i>
+                        Gas价格
+                    </h3>
+                    <p class="text-gray-600 mb-4">获取当前以太坊网络的Gas价格</p>
+                    <div class="bg-gray-50 rounded-lg p-3 mb-4">
+                        <code class="text-sm text-gray-700">GET /api/v1/gas-price</code>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        <i class="fas fa-clock mr-1"></i>响应时间: <span id="gas-response-time">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API响应结果显示区域 -->
+        <div class="bg-white rounded-xl shadow-lg mb-12">
+            <div class="p-8 border-b border-gray-200 flex items-center justify-between">
+                <div>
+                    <h3 class="text-2xl font-semibold text-gray-800">API响应结果</h3>
+                    <p class="text-gray-600 mt-1">实时查看API调用结果</p>
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="copyResponse()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center">
+                        <i class="fas fa-copy mr-2"></i>复制
+                    </button>
+                    <button onclick="clearResponse()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center">
+                        <i class="fas fa-trash mr-2"></i>清除
+                    </button>
+                </div>
+            </div>
+            <div class="p-8">
+                <div id="response-container" class="bg-gray-50 rounded-lg p-6 min-h-64 response-container">
+                    <div class="text-center text-gray-500">
+                        <i class="fas fa-code text-6xl mb-4 opacity-20"></i>
+                        <p class="text-lg">点击任意端点的"测试"按钮来查看API响应</p>
+                        <p class="text-sm mt-2">支持语法高亮和JSON格式化</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快速链接区域 -->
+        <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-8 text-white">
+            <h3 class="text-2xl font-bold mb-6">快速链接</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <a href="/docs" target="_blank" class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 hover:bg-opacity-20 transition-all card-hover">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-book text-2xl mr-3"></i>
+                        <h4 class="text-lg font-semibold">API文档</h4>
+                    </div>
+                    <p class="text-sm opacity-90">查看完整的API文档和说明</p>
+                </a>
+                
+                <a href="/redoc" target="_blank" class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 hover:bg-opacity-20 transition-all card-hover">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-file-alt text-2xl mr-3"></i>
+                        <h4 class="text-lg font-semibold">ReDoc</h4>
+                    </div>
+                    <p class="text-sm opacity-90">交互式API文档界面</p>
+                </a>
+                
+                <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-info-circle text-2xl mr-3"></i>
+                        <h4 class="text-lg font-semibold">系统信息</h4>
+                    </div>
+                    <div class="text-sm opacity-90 space-y-1">
+                        <div>服务端点: <code class="bg-white bg-opacity-20 px-2 py-1 rounded">/api/v1</code></div>
+                        <div>文档版本: <code class="bg-white bg-opacity-20 px-2 py-1 rounded">v0.1.0</code></div>
+                        <div>最后更新: <code class="bg-white bg-opacity-20 px-2 py-1 rounded" id="last-update">-</code></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页面底部 -->
+    <footer class="bg-gray-900 text-white mt-16">
+        <div class="container mx-auto px-6 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Web3 API Explorer</h3>
+                    <p class="text-gray-400">现代化的区块链API接口探索工具，提供直观的API测试体验。</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">快速链接</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="/docs" target="_blank" class="hover:text-white transition-colors">API文档</a></li>
+                        <li><a href="/redoc" target="_blank" class="hover:text-white transition-colors">ReDoc</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">GitHub</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">功能特性</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li>实时API测试</li>
+                        <li>语法高亮显示</li>
+                        <li>响应时间监控</li>
+                        <li>深色模式支持</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">技术栈</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li>FastAPI</li>
+                        <li>Web3.py</li>
+                        <li>Tailwind CSS</li>
+                        <li>Prism.js</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2024 Web3 API Explorer. 基于现代Web技术构建。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 自定义JavaScript -->
+    <script src="/static/js/main.js"></script>
+</body>
+</html>

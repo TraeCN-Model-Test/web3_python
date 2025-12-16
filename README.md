@@ -1,45 +1,26 @@
-# Web3 API 服务
+# Web3 API
 
-基于FastAPI的Web3 API服务，提供与以太坊区块链交互的基本功能。
-
-## 功能特性
-
-- 连接到以太坊主网
-- 获取当前区块号
-- 查询地址余额
-- 获取当前Gas价格
-- 获取链ID
+基于 FastAPI 的以太坊区块链 API 服务。
 
 ## 快速开始
 
-### 安装依赖
-
 ```bash
+# 安装依赖
 uv install
-```
 
-### 运行服务
-
-```bash
+# 启动服务
 uv run python run.py
 ```
 
-服务将在 http://localhost:8001 上启动。
+服务启动后：
+- API 文档: http://localhost:8000/docs
+- 浏览器界面: http://localhost:8000
 
-## API端点
+## API 端点
 
-- `GET /api/v1/block-number` - 获取当前区块号
-- `GET /api/v1/balance/{address}` - 获取指定地址的ETH余额
-- `GET /api/v1/gas-price` - 获取当前Gas价格
-- `GET /api/v1/chain-id` - 获取当前链ID
-
-### API文档
-
-- Swagger UI: http://localhost:8001/docs
-- ReDoc: http://localhost:8001/redoc
-
-## 技术栈
-
-- FastAPI - Web框架
-- Web3.py - 以太坊交互库
-- Pydantic - 数据验证和设置管理
+- `GET /api/v1/hello` - 基础测试接口
+- `GET /api/v1/status` - 获取连接状态
+- `GET /api/v1/block-number` - 获取区块号
+- `GET /api/v1/balance/{address}` - 查询余额
+- `GET /api/v1/chain-id` - 获取链 ID
+- `GET /api/v1/gas-price` - 获取 Gas 价格

@@ -5,6 +5,9 @@ FastAPI应用主入口
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+from pathlib import Path
 from app.core.config import settings
 from app.api.web3 import router as web3_router
 
@@ -46,18 +49,46 @@ app.add_middleware(
 # 注册路由
 app.include_router(web3_router, prefix=settings.api_prefix)
 
+# 配置静态文件和模板
+static_dir = Path(__file__).parent.parent / "static"
+templates_dir = Path(__file__).parent.parent / "templates"
 
-@app.get("/", tags=["root"])
-async def root() -> dict:
+# 挂载静态文件目录
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+if templates_dir.exists():
+    @app.get("/explorer", response_class=HTMLResponse, tags=["ui"])
+    async def api_explorer():
+        """
+        API浏览器界面
+        提供可视化的API接口测试界面
+        """
+        html_file = templates_dir / "index.html"
+        return HTMLResponse(content=html_file.read_text(), status_code=200)
+
+
+@app.get("/", response_class=HTMLResponse)
+async def root():
     """
-    根路径，返回API基本信息
+    根路径，直接返回API Explorer界面
     """
-    return {
-        "message": f"欢迎使用 {settings.app_name}",
-        "version": settings.app_version,
-        "docs_url": "/docs",
-        "api_prefix": settings.api_prefix
-    }
+    try:
+        templates_dir = Path(__file__).parent.parent / "templates"
+        index_path = templates_dir / "index.html"
+        
+        if not index_path.exists():
+            from fastapi import HTTPException
+            raise HTTPException(status_code=404, detail="Explorer界面文件不存在")
+        
+        return HTMLResponse(content=index_path.read_text(encoding="utf-8"), status_code=200)
+        
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"加载Explorer界面失败: {e}")
+        from fastapi import HTTPException
+        raise HTTPException(status_code=500, detail=f"加载界面失败: {str(e)}")
 
 
 @app.get("/favicon.ico", include_in_schema=False)
